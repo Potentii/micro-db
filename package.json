@@ -1,0 +1,44 @@
+{
+  "name": "@potentii/micro-db",
+  "version": "1.0.0",
+  "description": "A micro database",
+  "author": "Guilherme Reginaldo Ruella <potentii@gmail.com>",
+  "license": "MIT",
+  "main": "main.mjs",
+  "type": "module",
+  "scripts": {
+    "test": "mocha ./tests"
+  },
+  "files": [
+    "main.mjs",
+    "libs/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "micro",
+    "db",
+    "database",
+    "memory",
+    "inmemory",
+    "json",
+    "local",
+    "potentii"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Potentii/micro-db.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Potentii/micro-db/issues"
+  },
+  "homepage": "https://github.com/Potentii/micro-db#readme",
+  "dependencies": {
+    "@potentii/type-utils": "1.0.1",
+    "@potentii/unique-utils": "1.0.2"
+  },
+  "devDependencies": {
+    "mocha": "9.2.0",
+    "chai": "4.3.6"
+  }
+}
