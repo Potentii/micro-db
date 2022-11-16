@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 
 /**
- * @protected
+ * @package
  */
 export default class DataAccess{
 
