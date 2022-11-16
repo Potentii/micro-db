@@ -1,6 +1,6 @@
 {
   "name": "@potentii/micro-db",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A micro database",
   "author": "Guilherme Reginaldo Ruella <potentii@gmail.com>",
   "license": "MIT",
@@ -12,6 +12,7 @@
   "files": [
     "main.mjs",
     "libs/**/*",
+    "utils/**/*",
     "README.md",
     "LICENSE"
   ],
