@@ -1,6 +1,9 @@
 import DataAccess from "../utils/data-access.mjs";
 import MicroDbIndexedCache from "./micro-db-indexed-cache.mjs";
-import {UniqueUtils} from "@potentii/unique-utils";
+import Generator from "@potentii/unique-utils/libs/generators/generator.mjs";
+import * as uuid from "uuid";
+
+const ID_GENERATION_MAX_ATTEMPTS = 30;
 
 
 /**
@@ -46,6 +49,11 @@ export default class MicroDbRepo {
 	 * @type {boolean}
 	 */
 	#suppressWarnings;
+	/**
+	 *
+	 * @type {IdGenerator}
+	 */
+	#idGenerator;
 
 
 
@@ -55,9 +63,10 @@ export default class MicroDbRepo {
 	 * @param {string} dataKey The name of the data file to store the entities (without the extension)
 	 * @param {string} [idFieldName='id'] The name of the ID field (defaults to 'id')
 	 * @param {MicroDbIndexedCache[]} [indexedCaches=[]] All the indexed caches
+	 * @param {?(() => *)} [idSupplierFn] The generator function for new IDs. If generates an existing ID, the function will be called again, until it supplies a unique value, or it reaches the max tries threshold (30). It uses an UUID-v4 generator by default.
 	 * @param {boolean} [suppressWarnings=false] Whether it suppress the warnings on the console
 	 */
-	constructor(storeDirectory, dataKey, idFieldName = 'id', indexedCaches = [], suppressWarnings = false) {
+	constructor(storeDirectory, dataKey, idFieldName = 'id', indexedCaches = [], idSupplierFn = null, suppressWarnings = false) {
 		this.#storeDirectory = storeDirectory;
 		this.#dataKey = dataKey;
 		this.#idFieldName = idFieldName;
@@ -66,6 +75,9 @@ export default class MicroDbRepo {
 		for (let indexedCache of indexedCaches) {
 			this.#indexedCaches.set(indexedCache.fieldName, indexedCache);
 		}
+		this.#idGenerator = (idSupplierFn && typeof idSupplierFn == 'function')
+			? new IdGenerator(idSupplierFn)
+			: new IdGenerator(() => uuid.v4());
 	}
 
 
@@ -184,7 +196,7 @@ export default class MicroDbRepo {
 	async save(entity){
 		const entityClone = JSON.parse(JSON.stringify(entity));
 		if(!entityClone[this.#idFieldName])
-			entityClone[this.#idFieldName] = UniqueUtils.uuid.generateAgainstPredicate(id => this.#byIdIndexedCache.has(id));
+			entityClone[this.#idFieldName] = this.#idGenerator.generateAgainstMap(this.#byIdIndexedCache, ID_GENERATION_MAX_ATTEMPTS);
 
 
 
@@ -216,7 +228,7 @@ export default class MicroDbRepo {
 		for (let entity of entities) {
 			const entityClone = JSON.parse(JSON.stringify(entity));
 			if(!entityClone[this.#idFieldName])
-				entityClone[this.#idFieldName] = UniqueUtils.uuid.generateAgainstPredicate(id => this.#byIdIndexedCache.has(id));
+				entityClone[this.#idFieldName] = this.#idGenerator.generateAgainstMap(this.#byIdIndexedCache, ID_GENERATION_MAX_ATTEMPTS);
 
 			// *Updating the caches:
 			if(this.hasWithId(entityClone[this.#idFieldName])){
@@ -271,4 +283,26 @@ export default class MicroDbRepo {
 		}
 	}
 
+}
+
+
+class IdGenerator extends Generator{
+
+	/**
+	 * @type {() => *}
+	 */
+	#supplier;
+
+	/**
+	 *
+	 * @param {() => *} supplier
+	 */
+	constructor(supplier) {
+		super();
+		this.#supplier = supplier;
+	}
+
+	generateNewValue() {
+		return this.#supplier();
+	}
 }
